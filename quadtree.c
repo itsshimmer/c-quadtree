@@ -1,6 +1,7 @@
 #include "quadtree.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -10,6 +11,23 @@
 
 unsigned int first = 1;
 char desenhaBorda = 1;
+
+// Img cortaImagem(Img* pic) {
+//     RGB (*pixels)[pic->width] = (RGB(*)[pic->width]) pic->img;
+//     Img newImage;
+//     newImage.height = pic->height/2;
+//     newImage.width = pic->width/2;
+//     RGB newPixels[newImage.height*newImage.width];
+//     int newPixelsSize = 0;
+//     for(int h = 0; h<newImage.height; h++) {
+//         for(int w = 0; w<newImage.width; w++) {
+//             newPixels[newPixelsSize] = pixels[h][w];
+//             newPixelsSize++;
+//         }
+//     }
+//     newImage.img = newPixels;
+    
+// }
 
 QuadNode* newNode(int x, int y, int width, int height)
 {
@@ -30,9 +48,9 @@ QuadNode* geraQuadtree(Img* pic, float minDetail)
     RGB (*pixels)[pic->width] = (RGB(*)[pic->width]) pic->img;
 
     // Veja como acessar os primeiros 10 pixels da imagem, por exemplo:
-    int i;
-    for(i=0; i<10; i++)
-        printf("%02X %02X %02X\n",pixels[0][i].r,pixels[1][i].g,pixels[2][i].b);
+    // int i;
+    // for(i=0; i<10; i++)
+    //     printf("%02X %02X %02X\n",pixels[0][i].r,pixels[1][i].g,pixels[2][i].b);
 
     int width = pic->width;
     int height = pic->height;
@@ -41,10 +59,113 @@ QuadNode* geraQuadtree(Img* pic, float minDetail)
     // Implemente aqui o algoritmo que gera a quadtree, retornando o nodo raiz
     //////////////////////////////////////////////////////////////////////////
 
+    //cria quadtree
+    QuadNode* tree = newNode(0,0,width,height);
+
+    //descobre cor media e armazena
+    int total = 0;
+    int totalR = 0;
+    int totalG = 0;
+    int totalB = 0;
+
+    for(int h = tree->x; h<tree->height; h++) {
+        for(int w = tree->y; w<tree->width; w++) {
+            totalR = totalR + pixels[h][w].r;
+            totalG = totalG + pixels[h][w].g;
+            totalB = totalB + pixels[h][w].b;
+            total++;
+        }
+    }
+    
+    tree->color[0] = totalR/total;
+    tree->color[1] = totalG/total;
+    tree->color[2] = totalB/total;
+    //printf("color[0]: %d, color[1]: %d, color[2]: %d", tree->color[0], tree->color[1], tree->color[2]);
+
+    //calcular diferença 
+    total = 0;
+    double totalDiff = 0;
+
+    for(int h = tree->x; h<tree->height; h++) {
+        for(int w = tree->y; w<tree->width; w++) {
+            double R = pow((pixels[h][w].r - tree->color[0]),2);
+            double G = pow((pixels[h][w].g - tree->color[1]),2);
+            double B = pow((pixels[h][w].b - tree->color[2]),2);
+            double diff = sqrt(R+G+B);
+            //printf("diff: %f \n", diff);
+            totalDiff += diff;
+            total++;
+        }
+    }
+
+    totalDiff = totalDiff/total;
+    
+    if(totalDiff<minDetail) {
+        tree->status = CHEIO;
+        return tree;
+    } else {
+        tree->status = PARCIAL;
+
+        //cria nova imagem NW
+        Img* NwImageM = malloc(sizeof(Img));
+        Img NwImage;
+
+
+        NwImage.height = pic->height/2;
+        NwImage.width = pic->width/2;
+        int NwSize = NwImage.height*NwImage.width;
+        RGB NwPixels[NwSize];
+        //RGB* NwPixels = malloc(sizeof(RGB)*NwSize);
+        int NwPixelsSize = 0;
+        for(int h = 0; h<NwImage.height; h++) {
+            for(int w = 0; w<NwImage.width; w++) {
+                NwPixels[NwPixelsSize] = pixels[h][w];
+                NwPixelsSize++;
+            }
+        }
+        RGB* NwPixelsM = malloc(sizeof(RGB)*NwSize);
+        NwPixelsM = NwPixels;
+        NwImage.img = NwPixelsM;
+
+        NwImageM = &NwImage;
+
+        tree->NW=geraQuadtree(NwImageM, minDetail);
+
+        //cria nova imagem NE
+        Img* NeImageM = malloc(sizeof(Img));
+        Img NeImage;
+
+        NeImage.height = pic->height/2;
+        NeImage.width = pic->width/2;
+        int NeSize = NeImage.height*NeImage.width;
+        RGB NePixels[NeSize];
+        //RGB* NePixels = malloc(sizeof(RGB)*NeSize);
+        int NePixelsSize = 0;
+        for(int h = NeImage.height; h<pic->height; h++) {
+            for(int w = NeImage.width; w<pic->width; w++) {
+                NePixels[NePixelsSize] = pixels[h][w];
+                NePixelsSize++;
+            }
+        }
+        RGB* NePixelsM = malloc(sizeof(RGB)*NeSize);
+        NePixelsM = NePixels;
+        NeImage.img = NePixelsM;
+
+        NeImageM = &NeImage;
+
+        //gera quadtree a partir da nova imagem
+        tree->NE=geraQuadtree(NeImageM, minDetail);
+
+        return tree;
+    }
+
+    //printf("NivelDet: %f", totalDiff);
+    //exit(0);  
+
 // COMENTE a linha abaixo quando seu algoritmo ja estiver funcionando
 // Caso contrario, ele ira gerar uma arvore de teste com 3 nodos
 
-#define DEMO
+// #define DEMO
 #ifdef DEMO
 
     /************************************************************/
@@ -77,7 +198,7 @@ QuadNode* geraQuadtree(Img* pic, float minDetail)
 
 #endif
     // Finalmente, retorna a raiz da árvore
-    return raiz;
+    return tree;
 }
 
 // Limpa a memória ocupada pela árvore
