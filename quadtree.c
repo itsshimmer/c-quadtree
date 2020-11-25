@@ -28,27 +28,39 @@ char desenhaBorda = 1;
 //     newImage.img = newPixels;
     
 // }
-
+QuadNode* newNode(int x, int y, int width, int height)
+{
+    QuadNode* n = malloc(sizeof(QuadNode));
+    n->x = x;
+    n->y = y;
+    n->width = width;
+    n->height = height;
+    n->NW = n->NE = n->SW = n->SE = NULL;
+    n->color[0] = n->color[1] = n->color[2] = 0;
+    n->id = first++;
+    return n;
+}
 QuadNode* geraQuadtree(Img* pic, float minDetail, int x, int y, int width, int height)
 {
     RGB (*pixels)[pic->width] = (RGB(*)[pic->width]) pic->img;
 
-    QuadNode* tree = malloc(sizeof(QuadNode));
-    tree->x = x;
-    tree->y = y;
-    tree->width = width;
-    tree->height = height;
-    tree->NW = tree->NE = tree->SW = tree->SE = NULL;
-    tree->color[0] = tree->color[1] = tree->color[2] = 0;
-    tree->id = first++;
+    // QuadNode* tree = malloc(sizeof(QuadNode));
+    // x = x;
+    // y = y;
+    // width = width;
+    // height = height;
+    // tree->NW = tree->NE = tree->SW = tree->SE = NULL;
+    // tree->color[0] = tree->color[1] = tree->color[2] = 0;
+    // tree->id = first++;
+    QuadNode* tree = newNode(x,y,width,height);
 
     int total = 0;
     int totalR = 0;
     int totalG = 0;
     int totalB = 0;
 
-    for(int h = tree->x; h<tree->height; h++) {
-        for(int w = tree->y; w<tree->width; w++) {
+    for(int h = y; h<(y + height); h++) {
+        for(int w = x; w<(x + width); w++) {
             totalR = totalR + pixels[h][w].r;
             totalG = totalG + pixels[h][w].g;
             totalB = totalB + pixels[h][w].b;
@@ -65,8 +77,8 @@ QuadNode* geraQuadtree(Img* pic, float minDetail, int x, int y, int width, int h
     total = 0;
     double totalDiff = 0;
 
-    for(int h = tree->x; h<tree->height; h++) {
-        for(int w = tree->y; w<tree->width; w++) {
+    for(int h = y; h<(y + height); h++) {
+        for(int w = x; w<(x + width); w++) {
             double R = pow((pixels[h][w].r - tree->color[0]),2);
             double G = pow((pixels[h][w].g - tree->color[1]),2);
             double B = pow((pixels[h][w].b - tree->color[2]),2);
@@ -84,10 +96,14 @@ QuadNode* geraQuadtree(Img* pic, float minDetail, int x, int y, int width, int h
         return tree;
     } else {
         tree->status = PARCIAL;
+        // tree->NW = geraQuadtree(pic, minDetail, x, y, width/2, height/2);
+        // tree->NE = geraQuadtree(pic, minDetail, x+(width/2), y, width/2, height/2);
+        // tree->SW = geraQuadtree(pic, minDetail, x, (y+height)/2, width/2, height/2);
+        // tree->SE = geraQuadtree(pic, minDetail, (x+width)/2, (y+height)/2, width/2, height/2);
         tree->NW = geraQuadtree(pic, minDetail, x, y, width/2, height/2);
-        //tree->NE = geraQuadtree(pic, minDetail, x+(width/2), y, width/2, height/2);
-        //tree->SW = geraQuadtree(pic, minDetail, x, (y+height)/2, width/2, height/2);
-        //tree->SE = geraQuadtree(pic, minDetail, (x+width)/2, (y+height)/2, width/2, height/2);
+        tree->NE = geraQuadtree(pic, minDetail, x+width/2, y, width/2, height/2);
+        tree->SW = geraQuadtree(pic, minDetail, x, y+height/2, width/2, height/2);
+        tree->SE = geraQuadtree(pic, minDetail, x+width/2, y+height/2, width/2, height/2);
         return tree;
     }
 

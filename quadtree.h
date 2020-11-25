@@ -31,7 +31,7 @@ typedef struct {
 typedef struct Quad QuadNode;
 
 QuadNode* geraQuadtree(Img* img, float minDetail, int x, int y, int width, int height);
-//QuadNode* newNode(int x, int y, int width, int height);
+QuadNode* newNode(int x, int y, int width, int height);
 
 void clearTree(QuadNode* n);
 void drawTree(QuadNode* raiz);
