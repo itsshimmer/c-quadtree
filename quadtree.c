@@ -44,14 +44,6 @@ QuadNode* geraQuadtree(Img* pic, float minDetail, int x, int y, int width, int h
 {
     RGB (*pixels)[pic->width] = (RGB(*)[pic->width]) pic->img;
 
-    // QuadNode* tree = malloc(sizeof(QuadNode));
-    // x = x;
-    // y = y;
-    // width = width;
-    // height = height;
-    // tree->NW = tree->NE = tree->SW = tree->SE = NULL;
-    // tree->color[0] = tree->color[1] = tree->color[2] = 0;
-    // tree->id = first++;
     QuadNode* tree = newNode(x,y,width,height);
 
     int total = 0;
@@ -96,10 +88,6 @@ QuadNode* geraQuadtree(Img* pic, float minDetail, int x, int y, int width, int h
         return tree;
     } else {
         tree->status = PARCIAL;
-        // tree->NW = geraQuadtree(pic, minDetail, x, y, width/2, height/2);
-        // tree->NE = geraQuadtree(pic, minDetail, x+(width/2), y, width/2, height/2);
-        // tree->SW = geraQuadtree(pic, minDetail, x, (y+height)/2, width/2, height/2);
-        // tree->SE = geraQuadtree(pic, minDetail, (x+width)/2, (y+height)/2, width/2, height/2);
         tree->NW = geraQuadtree(pic, minDetail, x, y, width/2, height/2);
         tree->NE = geraQuadtree(pic, minDetail, x+width/2, y, width/2, height/2);
         tree->SW = geraQuadtree(pic, minDetail, x, y+height/2, width/2, height/2);
@@ -109,46 +97,6 @@ QuadNode* geraQuadtree(Img* pic, float minDetail, int x, int y, int width, int h
 
     return tree;
 }
-
-    //printf("NivelDet: %f", totalDiff);
-    //exit(0);  
-
-// COMENTE a linha abaixo quando seu algoritmo ja estiver funcionando
-// Caso contrario, ele ira gerar uma arvore de teste com 3 nodos
-
-// #define DEMO
-#ifdef DEMO
-
-    /************************************************************/
-    /* Teste: criando uma raiz e dois nodos a mais              */
-    /************************************************************/
-
-    QuadNode* raiz = newNode(0,0,width,height);
-    raiz->status = PARCIAL;
-    raiz->color[0] = 0;
-    raiz->color[1] = 0;
-    raiz->color[2] = 255;
-
-    QuadNode* nw = newNode(width/2,0,width/2,height/2);
-    nw->status = PARCIAL;
-    nw->color[0] = 0;
-    nw->color[1] = 0;
-    nw->color[2] = 255;
-
-    // Aponta da raiz para o nodo nw
-    raiz->NW = nw;
-
-    QuadNode* nw2 = newNode(width/2+width/4,0,width/4,height/4);
-    nw2->status = CHEIO;
-    nw2->color[0] = 255;
-    nw2->color[1] = 0;
-    nw2->color[2] = 0;
-
-    // Aponta do nodo nw para o nodo nw2
-    nw->NW = nw2;
-
-#endif
-    // Finalmente, retorna a raiz da árvore
 
 // Limpa a memória ocupada pela árvore
 void clearTree(QuadNode* n)

@@ -117,7 +117,7 @@ void keyboard(unsigned char key, int x, int y)
 
         printf("Detalhe: %d\n", detalhe);
 
-        raiz = geraQuadtree(&pic, detalhe, 0, 0, pic.width, pic.height);
+        raiz = geraQuadtree(&pic, detalhe);
     }
     glutPostRedisplay();
 }
